@@ -1,7 +1,7 @@
 
 import Foundation
 
-public func RK4SpringAnimation(tension tension:Double, friction:Double, initialVelocity:Double, delta:Double = 1/60.0) -> [Double] {
+public func RK4SpringAnimation(tension:Double, friction:Double, initialVelocity:Double, delta:Double = 1/60.0) -> [Double] {
 
   assert(tension >= 5 && tension <= 1000, "Tension should be 5 ~ 1000")
   assert(friction >= 5 && friction <= 100, "Friction should be 5 ~ 100")
@@ -19,7 +19,7 @@ public func RK4SpringAnimation(tension tension:Double, friction:Double, initialV
 
   while true {
 
-    let finished = lerpRK4Spring(value: &value, tension: tension, friction: friction, velocity: &velocity, delta: delta)
+    let finished = lerpRK4Spring(value:&value, tension:tension, friction:friction, velocity:&velocity, delta:delta)
     if value.isNaN {
       break
     }
@@ -32,7 +32,7 @@ public func RK4SpringAnimation(tension tension:Double, friction:Double, initialV
   return result
 }
 
-public func lerpRK4Spring(inout value value:Double, tension:Double, friction:Double, inout velocity:Double, delta:NSTimeInterval) -> Bool {
+public func lerpRK4Spring(value:inout Double, tension:Double, friction:Double, velocity:inout Double, delta:TimeInterval) -> Bool {
 
   if delta == 0 {
     return false
@@ -46,7 +46,7 @@ public func lerpRK4Spring(inout value value:Double, tension:Double, friction:Dou
   before.tension = tension
   before.friction = friction
 
-  after = springIntegrateState(before, speed: delta)
+  after = springIntegrate(state:before, speed:delta)
   value = 1 + after.x
   velocity = after.v
 
@@ -89,32 +89,32 @@ private struct SpringDerivative {
 private let tolerance = 1/500.0
 
 
-private func normalizeSpringValue(value:Double) -> Double {
+private func normalizeSpringValue(_ value:Double) -> Double {
   if value.isNaN {
     return 0
   }
   else if value.isInfinite {
-    return value.isSignMinus ? -DBL_MAX : DBL_MAX
+    return value.sign == .minus ? -DBL_MAX : DBL_MAX
   }
   else {
     return value
   }
 }
 
-private func springAccelerationForState(state:SpringState) -> Double {
+private func springAcceleration(forState state:SpringState) -> Double {
   return -state.tension * state.x - state.friction * state.v
 }
 
-private func springEvaluateState(initialState:SpringState) -> SpringDerivative {
+private func springEvaluate(state initialState:SpringState) -> SpringDerivative {
 
   var output:SpringDerivative = SpringDerivative()
   output.dx = initialState.v
-  output.dv = springAccelerationForState(initialState)
+  output.dv = springAcceleration(forState:initialState)
 
   return output
 }
 
-private func springEvaluateStateWithDerivative(initialState:SpringState, dt:Double, derivative:SpringDerivative) -> SpringDerivative {
+private func springEvaluate(state initialState:SpringState, dt:Double, derivative:SpringDerivative) -> SpringDerivative {
 
   var state:SpringState = SpringState()
   state.x = initialState.x + derivative.dx * dt
@@ -124,16 +124,16 @@ private func springEvaluateStateWithDerivative(initialState:SpringState, dt:Doub
 
   var output:SpringDerivative = SpringDerivative()
   output.dx = state.v
-  output.dv = springAccelerationForState(state)
+  output.dv = springAcceleration(forState:state)
 
   return output
 }
 
-private func springIntegrateState(state:SpringState, speed:Double) -> SpringState {
-  let a = springEvaluateState(state)
-  let b = springEvaluateStateWithDerivative(state, dt: speed * 0.5, derivative: a)
-  let c = springEvaluateStateWithDerivative(state, dt: speed * 0.5, derivative: b)
-  let d = springEvaluateStateWithDerivative(state, dt: speed,       derivative: c)
+private func springIntegrate(state:SpringState, speed:Double) -> SpringState {
+  let a = springEvaluate(state:state)
+  let b = springEvaluate(state:state, dt:speed * 0.5, derivative:a)
+  let c = springEvaluate(state:state, dt:speed * 0.5, derivative:b)
+  let d = springEvaluate(state:state, dt:speed,       derivative:c)
 
   let tx = (a.dx + 2.0 * (b.dx + c.dx) + d.dx)
   let ty = (a.dv + 2.0 * (b.dv + c.dv) + d.dv)
