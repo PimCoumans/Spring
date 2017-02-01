@@ -86,7 +86,7 @@ private struct SpringDerivative {
   init() {}
 }
 
-private let tolerance = 1/500.0
+private let tolerance = 1/5000.0
 
 
 private func normalizeSpringValue(_ value:Double) -> Double {
