@@ -94,18 +94,18 @@ private func normalizeSpringValue(_ value:Double) -> Double {
     return 0
   }
   else if value.isInfinite {
-    return value.sign == .minus ? -DBL_MAX : DBL_MAX
+    return (value.sign == .minus) ? -Double.greatestFiniteMagnitude : Double.greatestFiniteMagnitude
   }
   else {
     return value
   }
 }
 
-private func springAcceleration(forState state:SpringState) -> Double {
+private func springAccelerationForState(_ state:SpringState) -> Double {
   return -state.tension * state.x - state.friction * state.v
 }
 
-private func springEvaluate(state initialState:SpringState) -> SpringDerivative {
+private func springEvaluateState(_ initialState:SpringState) -> SpringDerivative {
 
   var output:SpringDerivative = SpringDerivative()
   output.dx = initialState.v
@@ -114,7 +114,7 @@ private func springEvaluate(state initialState:SpringState) -> SpringDerivative 
   return output
 }
 
-private func springEvaluate(state initialState:SpringState, dt:Double, derivative:SpringDerivative) -> SpringDerivative {
+private func springEvaluateStateWithDerivative(_ initialState:SpringState, dt:Double, derivative:SpringDerivative) -> SpringDerivative {
 
   var state:SpringState = SpringState()
   state.x = initialState.x + derivative.dx * dt
@@ -129,11 +129,11 @@ private func springEvaluate(state initialState:SpringState, dt:Double, derivativ
   return output
 }
 
-private func springIntegrate(state:SpringState, speed:Double) -> SpringState {
-  let a = springEvaluate(state:state)
-  let b = springEvaluate(state:state, dt:speed * 0.5, derivative:a)
-  let c = springEvaluate(state:state, dt:speed * 0.5, derivative:b)
-  let d = springEvaluate(state:state, dt:speed,       derivative:c)
+private func springIntegrateState(_ state:SpringState, speed:Double) -> SpringState {
+  let a = springEvaluateState(state)
+  let b = springEvaluateStateWithDerivative(state, dt: speed * 0.5, derivative: a)
+  let c = springEvaluateStateWithDerivative(state, dt: speed * 0.5, derivative: b)
+  let d = springEvaluateStateWithDerivative(state, dt: speed,       derivative: c)
 
   let tx = (a.dx + 2.0 * (b.dx + c.dx) + d.dx)
   let ty = (a.dv + 2.0 * (b.dv + c.dv) + d.dv)
