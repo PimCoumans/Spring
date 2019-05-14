@@ -46,7 +46,7 @@ public func lerpRK4Spring(value:inout Double, tension:Double, friction:Double, v
   before.tension = tension
   before.friction = friction
 
-  after = springIntegrate(state:before, speed:delta)
+  after = springIntegrateState(before, speed:delta)
   value = 1 + after.x
   velocity = after.v
 
@@ -109,7 +109,7 @@ private func springEvaluateState(_ initialState:SpringState) -> SpringDerivative
 
   var output:SpringDerivative = SpringDerivative()
   output.dx = initialState.v
-  output.dv = springAcceleration(forState:initialState)
+  output.dv = springAccelerationForState(initialState)
 
   return output
 }
@@ -124,7 +124,7 @@ private func springEvaluateStateWithDerivative(_ initialState:SpringState, dt:Do
 
   var output:SpringDerivative = SpringDerivative()
   output.dx = state.v
-  output.dv = springAcceleration(forState:state)
+  output.dv = springAccelerationForState(state)
 
   return output
 }
